@@ -2,6 +2,7 @@
 OpenSP4000
 
 [![SP4000](http://res.cloudinary.com/peralex-electronics/image/upload/v1511423826/storage-pod-03_roh7wk.jpg)](http://www.peralex.com/radio-astronomy/)
+
 The SP4000 range of high performance, network-centric HDD and SSD managed
 storage solutions provides unprecedented scalability and performance for high
 end data storage and buffering tasks.
