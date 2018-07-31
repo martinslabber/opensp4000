@@ -21,7 +21,7 @@ def get_hddtemp(device):
     return temperature
 
 
-def prom_metric(metric_name, label_values, value, timestamp=True):
+def prom_metric(metric_name, label_values, value, timestamp=False):
     if value is None:
         value = 'Nan'
     # How to escape '{' in format string??
