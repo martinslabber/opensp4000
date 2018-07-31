@@ -24,7 +24,8 @@ def prom_metric(metric_name, label_values, value, timestamp=True):
     if value is None:
         value = 'Nan'
     # How to escape '{' in format string??
-    labels = ', '.join(['{}={}'.format(k, v) for k, v in label_values.items()])
+    labels = ', '.join(['{}="{}"'.format(k, v)
+                        for k, v in label_values.items()])
     metric_str = "{}{}{}{} {}".format(metric_name, '{', labels, '}', value)
     if timestamp:
         metric_str += " {}".format(int(time.time() * 1e6))
