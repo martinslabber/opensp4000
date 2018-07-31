@@ -36,6 +36,9 @@ def hddtemp_to_prometheus_textfile(path, disk_map):
 
     fh, temp_file = tempfile.mkstemp(text=True)
     with open(temp_file, 'w') as fh:
+        fh.write("# HELP node_disk_temperature HDD monitor for temperature "
+                 "(input)")
+        fh.write("# TYPE node_hwmon_temp_celsius gauge")
         for bayno, disk_path in disk_map.items():
             abs_path = os.path.realpath(os.path.abspath(disk_path))
             temperature = get_hddtemp(abs_path)
