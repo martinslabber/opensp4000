@@ -23,4 +23,4 @@ storage capacity of up to 384 TB per unit (using 8TB HDDs).
 
 The SP4000 series is the ideal hardware platform on which to implement high
 performance/high redundancy RAID arrays, as well as scalable network-centric
-object stores (e.g. CEPH Object Store Daemons), for data-centric compute.
+object stores (e.g. Ceph Object Store Daemons), for data-centric compute.
