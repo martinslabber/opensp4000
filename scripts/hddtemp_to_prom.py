@@ -12,7 +12,7 @@ import datetime
 
 def get_hddtemp(device):
     temperature = None
-    cmd = ['hddtemp', '-n', '--unit=C', device]
+    cmd = ['/usr/sbin/hddtemp', '-n', '--unit=C', device]
     try:
         temperature = int(subprocess.check_output(cmd))
     except Exception:
