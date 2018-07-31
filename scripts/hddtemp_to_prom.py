@@ -7,6 +7,7 @@ import time
 import subprocess
 import tempfile
 import csv
+import datetime
 
 
 def get_hddtemp(device):
@@ -36,6 +37,7 @@ def hddtemp_to_prometheus_textfile(path, disk_map):
 
     fh, temp_file = tempfile.mkstemp(text=True)
     with open(temp_file, 'w') as fh:
+        fh.write("# " + datetime.datetime.now().isoformat())
         fh.write("# HELP node_disk_temperature HDD monitor for temperature "
                  "(input)\n")
         fh.write("# TYPE node_hwmon_temp_celsius gauge\n")
