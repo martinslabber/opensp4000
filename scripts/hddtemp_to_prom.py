@@ -9,6 +9,7 @@ import tempfile
 import csv
 import datetime
 
+METRIC = "node_disk_temperature_celsius"
 
 def get_hddtemp(device):
     temperature = None
@@ -38,14 +39,14 @@ def hddtemp_to_prometheus_textfile(path, disk_map):
     fh, temp_file = tempfile.mkstemp(text=True)
     with open(temp_file, 'w') as fh:
         fh.write("# " + datetime.datetime.now().isoformat() + "\n")
-        fh.write("# HELP node_disk_temperature HDD monitor for temperature "
+        fh.write("# HELP " + METRIC + " HDD monitor for temperature "
                  "(input)\n")
-        fh.write("# TYPE node_disk_temperature gauge\n")
+        fh.write("# TYPE " + METRIC + " gauge\n")
         for bayno, disk_path in disk_map.items():
             abs_path = os.path.realpath(os.path.abspath(disk_path))
             temperature = get_hddtemp(abs_path)
             labels = {'bayno': bayno, 'device': abs_path}
-            fh.write(prom_metric('node_disk_temperature', labels, temperature))
+            fh.write(prom_metric(METRIC, labels, temperature))
             fh.write('\n')
     os.chmod(temp_file, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
     os.rename(temp_file, os.path.join(path, 'hdd_temp.prom'))
