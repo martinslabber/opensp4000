@@ -39,7 +39,7 @@ def hddtemp_to_prometheus_textfile(path, disk_map):
             abs_path = os.path.realpath(os.path.abspath(disk_path))
             temperature = get_hddtemp(abs_path)
             labels = {'bayno': bayno, 'device': abs_path}
-            fh.write(prom_metric('hdd_temp', labels, temperature))
+            fh.write(prom_metric('node_disk_temperature', labels, temperature))
             fh.write('\n')
     os.chmod(temp_file, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
     os.rename(temp_file, os.path.join(path, 'hdd_temp.prom'))
