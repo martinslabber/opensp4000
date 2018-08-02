@@ -37,7 +37,7 @@ def prom_metric(metric_name, label_values, value, timestamp=False):
 
 def create_labels(config, **kwargs):
     labels = dict(kwargs)
-    for key in ['rack-name', 'rack-u']:
+    for key in ['rack_name', 'rack_u']:
         value = config.get(key)
         if value:
             labels[key] = value
@@ -84,7 +84,7 @@ def create_config():
         for section, key in [('rack', 'name'), ('rack', 'u')]:
             value = config.get(section, key, fallback=None)
             if value:
-                data[section + '-' + key] = value
+                data[section + '_' + key] = value
 
     return data
 
