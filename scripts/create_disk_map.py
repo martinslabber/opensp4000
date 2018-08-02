@@ -111,7 +111,7 @@ def main(input_filename, output_filename):
 if __name__ == '__main__':
 
     input_filename='/etc/opensp4000/sp4000l_bay_layout.csv'
-    output_filename='/etc/opensp4000/disk_map.2.csv'
+    output_filename='/etc/opensp4000/disk_map.csv'
 
     if not os.path.isfile(input_filename):
         print('{} does not exist. Exiting.'.format(input_filename))
