@@ -8,9 +8,11 @@ import subprocess
 import tempfile
 import csv
 import datetime
-import configparser
+import json
+import glob
 
 METRIC = "node_disk_temperature_celsius"
+
 
 def get_hddtemp(device):
     temperature = None
@@ -37,10 +39,14 @@ def prom_metric(metric_name, label_values, value, timestamp=False):
 
 def create_labels(config, **kwargs):
     labels = dict(kwargs)
-    for key in ['rack_name', 'rack_u']:
-        value = config.get(key)
-        if value:
-            labels[key] = value
+    position = config.get('position')
+    if position:
+        labels['rack_position'] = position
+
+    name = config.get('rack', {}).get('name')
+    if name:
+        labels['rack_name'] = name
+
     return labels
 
 
@@ -75,16 +81,15 @@ def read_drive_map(map_file):
 
 
 def create_config():
-    """Collects some system information."""
+    """Collects system information."""
     data = {}
-    if os.path.isfile('/etc/hardware/rack'):
-        config = configparser.ConfigParser()
-        config.read_file(open('/etc/hardware/rack'))
-
-        for section, key in [('rack', 'name'), ('rack', 'u')]:
-            value = config.get(section, key, fallback=None)
-            if value:
-                data[section + '_' + key] = value
+    for filename in sorted(glob.glob('/etc/hardware/*.json')):
+        try:
+            with open(filename) as fh:
+                file_data = json.load(fh)
+                data.update(file_data)
+        except Exception as error:
+            print(error)
 
     return data
 
