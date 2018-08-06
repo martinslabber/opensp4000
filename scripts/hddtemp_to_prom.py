@@ -1,20 +1,23 @@
 #!/usr/bin/env python3
 
-import os
+"""Collect harddrive temperatures and write it to Prometheus textfile."""
+
 import argparse
-import stat
-import time
-import subprocess
-import tempfile
 import csv
 import datetime
-import json
 import glob
+import json
+import os
+import stat
+import subprocess
+import tempfile
+import time
 
 METRIC = "node_disk_temperature_celsius"
 
 
 def get_hddtemp(device):
+    """Get the temperature of a drive."""
     temperature = None
     cmd = ['/usr/sbin/hddtemp', '-n', '--unit=C', device]
     try:
@@ -29,8 +32,8 @@ def prom_metric(metric_name, label_values, value, timestamp=False):
     if value is None:
         value = 'Nan'
     # How to escape '{' in format string??
-    labels = ', '.join(['{}="{}"'.format(k, v)
-                        for k, v in label_values.items()])
+    labels = ', '.join(
+        ['{}="{}"'.format(k, v) for k, v in label_values.items()])
     metric_str = "{}{}{}{} {}".format(metric_name, '{', labels, '}', value)
     if timestamp:
         metric_str += " {}".format(int(time.time() * 1e6))
@@ -96,11 +99,17 @@ def create_config():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('mapfile', nargs=1, type=argparse.FileType('r'),
-                        help="Device to bay map file. (CSV)")
-    parser.add_argument('prometheus_textfile_path', nargs=1, type=str,
-                        help="Path where prometheus textfile plugin expect"
-                             "metrics files.")
+    parser.add_argument(
+        'mapfile',
+        nargs=1,
+        type=argparse.FileType('r'),
+        help="Device to bay map file. (CSV)")
+    parser.add_argument(
+        'prometheus_textfile_path',
+        nargs=1,
+        type=str,
+        help="Path where prometheus textfile plugin expect"
+        "metrics files.")
     args = parser.parse_args()
     path = args.prometheus_textfile_path[0]
     assert os.path.isdir(path), "Prometheus path do not exists."
