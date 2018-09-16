@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 
 """Collect harddrive temperatures and write it to Prometheus textfile."""
 
@@ -33,7 +33,7 @@ def prom_metric(metric_name, label_values, value, timestamp=False):
         value = 'Nan'
     # How to escape '{' in format string??
     labels = ', '.join(
-        ['{}="{}"'.format(k, v) for k, v in label_values.items()])
+        ['{}="{}"'.format(k, v) for k, v in label_values.items() if v is not None])
     metric_str = "{}{}{}{} {}".format(metric_name, '{', labels, '}', value)
     if timestamp:
         metric_str += " {}".format(int(time.time() * 1e6))
@@ -61,7 +61,7 @@ def hddtemp_to_prometheus_textfile(path, disk_map, config):
         fh.write("# HELP " + METRIC + " HDD monitor for temperature "
                  "(input)\n")
         fh.write("# TYPE " + METRIC + " gauge\n")
-        for bayno, disk_path in disk_map.items():
+        for disk_path, bayno in disk_map.items():
             abs_path = os.path.realpath(os.path.abspath(disk_path))
             temperature = get_hddtemp(abs_path)
             labels = create_labels(config, bayno=bayno, device=abs_path)
@@ -75,10 +75,9 @@ def hddtemp_to_prometheus_textfile(path, disk_map, config):
 def read_drive_map(map_file):
 
     drive_map = {}
-    # with open(map_file, newline='') as csvfile:
     reader = csv.DictReader(map_file)
     for row in reader:
-        drive_map[int(row['bay'].strip())] = row['device'].strip()
+        drive_map[row['device'].strip()] = int(row['bay'].strip())
 
     return drive_map
 
