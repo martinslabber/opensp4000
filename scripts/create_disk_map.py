@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 
 
 import collections
@@ -13,6 +13,8 @@ import sys
 
 cmd = '/opt/MegaRAID/storcli/storcli64'
 
+class NoControllersError(Exception):
+    """No controllers where detected."""
 
 def run_subprocess(cmd):
     retval = subprocess.check_output(cmd.split(' '))
@@ -45,7 +47,12 @@ def get_lsi_cards():
     # get info from command output
     status_code = strip_value(cmd_output[0])
     status = strip_value(cmd_output[1])
+    number_of_controllers = int(strip_value(cmd_output[4]))
     hostname = strip_value(cmd_output[5])
+
+    # check if there are controllers
+    if number_of_controllers == 0:
+        raise NoControllersError
 
     # get info on attached card(s)
 
@@ -58,8 +65,8 @@ def get_lsi_cards():
         ctl = row[0]
         model = row[1]
         pci_addr = format_pci_addr(row[6])
-        lsi_cards.append(dict(zip(('ctl','model','pci_addr',),(ctl,model,pci_addr,)))) 
- 
+        lsi_cards.append(dict(zip(('ctl','model','pci_addr',),(ctl,model,pci_addr,))))
+
     storcli64_show = dict(zip(('status_code', 'status', 'hostname', 'cards',),(status_code, status, hostname, lsi_cards,)))
 
     return storcli64_show
@@ -73,40 +80,43 @@ def unmangle_symlink(d):
 
 
 def main(input_filename, output_filename):
-    lsi_cards = get_lsi_cards()
-    #list should be order specific
-    pci_busses = [l['pci_addr'] for l in lsi_cards['cards']]
+    try:
+        lsi_cards = get_lsi_cards()
+        #list should be order specific
+        pci_busses = [l['pci_addr'] for l in lsi_cards['cards']]
 
-    # map by-path to bays
-    hdd_by_path_to_bay = []
-    with open(input_filename) as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-           hdd_by_path_to_bay.append(('/dev/disk/by-path/pci-{}-sas-phy{}-lun-0'.format(pci_busses[int(row['pci'])], row['phy']), int(row['bay'])),)
+        # map by-path to bays
+        hdd_by_path_to_bay = []
+        with open(input_filename) as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+               hdd_by_path_to_bay.append(('/dev/disk/by-path/pci-{}-sas-phy{}-lun-0'.format(pci_busses[int(row['pci'])], row['phy']), int(row['bay'])),)
 
-    # get all by-id devices
-    ata_glob = glob.glob('/dev/disk/by-id/ata-*') 
-    ata_disks = [(unmangle_symlink(d),d) for d in ata_glob]
-    
-    # map by path to device
-    path_disks = [(unmangle_symlink(d), d) for d in list(zip(*hdd_by_path_to_bay))[0]] 
- 
-    # cross map and filter by-id to by-path
-    ata_dict = dict(ata_disks)
-    path_dict = dict(path_disks)   
-    hdd_by_id_to_path = [(path_dict[k],ata_dict[k]) for k in path_dict.keys()]
-    
-    # map bay to by-path
-    id_to_path_dict = dict(hdd_by_id_to_path)
-    by_path_to_bay_dict = dict(hdd_by_path_to_bay) 
-    hdd_bay_to_by_id = [(by_path_to_bay_dict[k], id_to_path_dict[k],) for k in by_path_to_bay_dict.keys()]
+        # get all by-id devices
+        ata_glob = glob.glob('/dev/disk/by-id/ata-*')
+        ata_disks = [(unmangle_symlink(d),d) for d in ata_glob]
 
-    with open(output_filename, 'w') as csvfile:
-        fieldnames = ['bay', 'device']
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        writer.writeheader()
-        for bay, device in sorted(hdd_bay_to_by_id):
-            writer.writerow({'bay': bay, 'device': device})
+        # map by path to device
+        path_disks = [(unmangle_symlink(d), d) for d in list(zip(*hdd_by_path_to_bay))[0]]
+
+        # cross map and filter by-id to by-path
+        ata_dict = dict(ata_disks)
+        path_dict = dict(path_disks)
+        hdd_by_id_to_path = [(path_dict[k],ata_dict[k]) for k in path_dict.keys()]
+
+        # map bay to by-path
+        id_to_path_dict = dict(hdd_by_id_to_path)
+        by_path_to_bay_dict = dict(hdd_by_path_to_bay)
+        hdd_bay_to_by_id = [(by_path_to_bay_dict[k], id_to_path_dict[k],) for k in by_path_to_bay_dict.keys()]
+
+        with open(output_filename, 'w') as csvfile:
+            fieldnames = ['bay', 'device']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for bay, device in sorted(hdd_bay_to_by_id):
+                writer.writerow({'bay': bay, 'device': device})
+    except NoControllersError:
+         print('No controllers detected, so no need to generate {}.'.format(output_filename))
 
 if __name__ == '__main__':
 
