@@ -21,7 +21,7 @@ setup(
     install_requires=[],
     setup_requires=[],
     scripts=['scripts/hddtemp_to_prom.py',
-             'scripts/create_disk_map.py],
+             'scripts/create_disk_map.py'],
     extras_require={
         'test': tests_require,
         'doc': docs_require
