@@ -87,10 +87,16 @@ def main(input_filename, output_filename):
 
         # map by-path to bays
         hdd_by_path_to_bay = []
+        empty_bays = []
         with open(input_filename) as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
-               hdd_by_path_to_bay.append(('/dev/disk/by-path/pci-{}-sas-phy{}-lun-0'.format(pci_busses[int(row['pci'])], row['phy']), int(row['bay'])),)
+               dev_disk = '/dev/disk/by-path/pci-{}-sas-phy{}-lun-0'.format(pci_busses[int(row['pci'])], row['phy'])
+               # only use what we can find
+               if os.path.islink(dev_disk):
+                   hdd_by_path_to_bay.append((dev_disk, int(row['bay'])))
+               else:
+                   empty_bays.append(row['bay'])
 
         # get all by-id devices
         ata_glob = glob.glob('/dev/disk/by-id/ata-*')
@@ -115,6 +121,9 @@ def main(input_filename, output_filename):
             writer.writeheader()
             for bay, device in sorted(hdd_bay_to_by_id):
                 writer.writerow({'bay': bay, 'device': device})
+        if empty_bays:
+            print('The following bays appear to be empty: {}'.format(', '.join(empty_bays)))
+
     except NoControllersError:
          print('No controllers detected, so no need to generate {}.'.format(output_filename))
 
